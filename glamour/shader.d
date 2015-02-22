@@ -2,24 +2,29 @@ module glamour.shader;
 
 private {
     import glamour.gl : GLenum, GLuint, GLint, GLchar, GLboolean,
-                        GL_VERTEX_SHADER,
-//                                 GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER,
-                        GL_GEOMETRY_SHADER, GL_FRAGMENT_SHADER,
-                        GL_LINK_STATUS, GL_FALSE, GL_INFO_LOG_LENGTH,
-                        GL_COMPILE_STATUS, GL_TRUE,
-                        glCreateProgram, glCreateShader, glCompileShader,
-                        glLinkProgram, glGetShaderiv, glGetShaderInfoLog,
-                        glGetProgramInfoLog, glGetProgramiv, glShaderSource,
-                        glUseProgram, glAttachShader, glGetAttribLocation,
-                        glDeleteProgram, glDeleteShader, glGetFragDataLocation,
-                        glGetUniformLocation, glUniform1i, glUniform1f,
-                        glUniform2f, glUniform2fv, glUniform3fv,
-                        glUniform4fv, glUniformMatrix2fv, glUniformMatrix2x3fv,
-                        glUniformMatrix2x4fv, glUniformMatrix3fv, glUniformMatrix3x2fv,
-                        glUniformMatrix3x4fv, glUniformMatrix4fv, glUniformMatrix4x2fv,
-                        glUniformMatrix4x3fv, glUniform2iv, glUniform3iv, glUniform4iv;
+           GL_VERTEX_SHADER,
+           GL_GEOMETRY_SHADER, GL_FRAGMENT_SHADER,
+           GL_LINK_STATUS, GL_FALSE, GL_INFO_LOG_LENGTH,
+           GL_COMPILE_STATUS, GL_TRUE,
+           glCreateProgram, glCreateShader, glCompileShader,
+           glLinkProgram, glGetShaderiv, glGetShaderInfoLog,
+           glGetProgramInfoLog, glGetProgramiv, glShaderSource,
+           glUseProgram, glAttachShader, glGetAttribLocation,
+           glDeleteProgram, glDeleteShader, glGetFragDataLocation,
+           glGetUniformLocation, glUniform1i, glUniform1f,
+           glUniform2f, glUniform2fv, glUniform3fv,
+           glUniform4fv, glUniformMatrix2fv, glUniformMatrix2x3fv,
+           glUniformMatrix2x4fv, glUniformMatrix3fv, glUniformMatrix3x2fv,
+           glUniformMatrix3x4fv, glUniformMatrix4fv, glUniformMatrix4x2fv,
+           glUniformMatrix4x3fv, glUniform2iv, glUniform3iv, glUniform4iv;
+    static if(__traits(compiles,
+                {import glamour.gl : GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER;}))
+    {
+        import glamour.gl : GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER;
+        version = tessEnums;
+    }
     import glamour.util : checkgl;
-
+    
     import std.conv : to;
     import std.file : readText;
     import std.path : baseName, stripExtension;
@@ -32,7 +37,7 @@ private {
     version(gl3n) {
         import gl3n.util : is_vector, is_matrix, is_quaternion;
     }
-
+    
     debug import std.stdio : stderr;
 }
 
@@ -42,6 +47,18 @@ GLenum to_opengl_shader(string s, string filename="<unknown>") {
         case "vertex": return GL_VERTEX_SHADER;
         case "geometry": return GL_GEOMETRY_SHADER;
         case "fragment": return GL_FRAGMENT_SHADER;
+        version(tessEnums)
+        {
+            case "control": return GL_TESS_CONTROL_SHADER;
+            case "eval": return GL_TESS_EVALUATION_SHADER;
+        }
+        else
+        {
+            case "control":
+            case "eval": throw new ShaderException(
+                                 "OpenGL bindings used do not support tesselation shaders",
+                                 "load", filename);
+        }
         default: throw new ShaderException(format("Unknown shader, %s.", s), "load", filename);
     }
     assert(0);
